@@ -61,6 +61,7 @@ python313-GitPython \
 python313-pygit2 \
 git
 
+RUN zypper remove -y busybox-gawk
 RUN --mount=type=cache,target=/var/cache/zypp \
     zypper --gpg-auto-import-keys \
         install --no-confirm --auto-agree-with-licenses \
