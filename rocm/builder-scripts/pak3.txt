@@ -1,8 +1,6 @@
-# 'compel lark' for smZNodes
 # 'torchdiffeq' for DepthFM
 # 'fairscale' for APISR
 accelerate
-compel
 diffusers
 fairscale
 ftfy
@@ -10,9 +8,9 @@ huggingface-hub
 imageio
 joblib
 kornia
-lark
 matplotlib
 onnx
+onnxruntime
 opencv-contrib-python-headless
 pandas
 pilgram

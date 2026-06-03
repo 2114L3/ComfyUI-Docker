@@ -23,11 +23,16 @@ cat <<EOF > /default-comfyui-bundle/ComfyUI/user/__manager/config.ini
 [default]
 use_uv = False
 security_level = weak
+downgrade_blacklist = torch, torchvision, torchaudio
 EOF
 
 cd /default-comfyui-bundle/ComfyUI/custom_nodes
 
 gcs https://github.com/Comfy-Org/ComfyUI-Manager.git
+
+# Disable Manager cache update on startup ("FETCH ComfyRegistry Data")
+grep -n "run(default_cache_update())" ./ComfyUI-Manager/glob/manager_server.py && 
+sed -i.bak '/run(default_cache_update())/d' ./ComfyUI-Manager/glob/manager_server.py
 
 # Performance
 gcs https://github.com/openvino-dev-samples/comfyui_openvino.git
@@ -48,7 +53,6 @@ gcs https://github.com/bash-j/mikey_nodes.git
 gcs https://github.com/jags111/efficiency-nodes-comfyui.git
 gcs https://github.com/pythongosssss/ComfyUI-Custom-Scripts.git
 gcs https://github.com/rgthree/rgthree-comfy.git
-gcs https://github.com/shiimizu/ComfyUI_smZNodes.git
 gcs https://github.com/yolain/ComfyUI-Easy-Use.git
 
 # Control
@@ -78,7 +82,6 @@ gcs https://github.com/1038lab/ComfyUI-QwenVL.git
 
 # To be removed in future
 gcs https://github.com/cubiq/ComfyUI_essentials.git
-gcs https://github.com/Gourieff/ComfyUI-ReActor.git ComfyUI-ReActor.disabled
 
 
 echo "########################################"

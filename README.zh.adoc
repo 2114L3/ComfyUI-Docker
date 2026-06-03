@@ -2,8 +2,8 @@
 
 中文 | ℹ️ *link:README.adoc[English]*
 
-https://github.com/comfyanonymous/ComfyUI[ComfyUI]
-是一套使用节点工作流的 Stable Diffusion 图形界面。 +
+https://github.com/Comfy-Org/ComfyUI[ComfyUI]
+是一套使用节点工作流的 AIGC 图形界面。 +
 本仓库所构建的
 https://hub.docker.com/r/yanwk/comfyui-boot[Docker 镜像]
 包含其依赖项，及下载／启动脚本。
@@ -12,28 +12,38 @@ https://hub.docker.com/r/yanwk/comfyui-boot[Docker 镜像]
 
 ```sh
 mkdir -p \
-  storage \
+  storage-cache/dot-cache \
+  storage-cache/dot-config \
+  storage-nodes/dot-local \
+  storage-nodes/custom_nodes \
   storage-models/models \
   storage-models/hf-hub \
   storage-models/torch-hub \
   storage-user/input \
   storage-user/output \
-  storage-user/workflows
+  storage-user/user-profile \
+  storage-user/user-scripts
 
+# Add sudo if needed
 docker run -it --rm \
-  --name comfyui \
-  --runtime nvidia \
+  --name comfyui-cu130 \
+  --pull=always \
+  --runtime=nvidia \
   --gpus all \
   -p 8188:8188 \
-  -v "$(pwd)"/storage:/root \
+  -v "$(pwd)"/storage-cache/dot-cache:/root/.cache \
+  -v "$(pwd)"/storage-cache/dot-config:/root/.config \
+  -v "$(pwd)"/storage-nodes/dot-local:/root/.local \
+  -v "$(pwd)"/storage-nodes/custom_nodes:/root/ComfyUI/custom_nodes \
   -v "$(pwd)"/storage-models/models:/root/ComfyUI/models \
   -v "$(pwd)"/storage-models/hf-hub:/root/.cache/huggingface/hub \
   -v "$(pwd)"/storage-models/torch-hub:/root/.cache/torch/hub \
   -v "$(pwd)"/storage-user/input:/root/ComfyUI/input \
   -v "$(pwd)"/storage-user/output:/root/ComfyUI/output \
-  -v "$(pwd)"/storage-user/workflows:/root/ComfyUI/user/default/workflows \
-  -e CLI_ARGS="--disable-xformers" \
-  yanwk/comfyui-boot:cu128-slim
+  -v "$(pwd)"/storage-user/user-profile:/root/ComfyUI/user \
+  -v "$(pwd)"/storage-user/user-scripts:/root/user-scripts \
+  -e CLI_ARGS="" \
+  yanwk/comfyui-boot:cu130-slim-v2
 ```
 
 
@@ -50,20 +60,22 @@ docker run -it --rm \
 GTX 1660 
 | TITAN V | GTX 1080 | GTX 980
 
-| cu130
+| cu132
 | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❌ | ❌ | ❌
 
-| cu128 ⭐
-| ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❌ | ❌
+| cu130 ⭐
+| ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ❌ | ❌ | ❌
 
 | cu126
-| ❌ | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✔️
+| ❌ | ❌ | ✔️ | ✔️ | ✔️ | ✔️ | ✔️ | ✔️
 
 |===
 
-* **推荐 CUDA 12.8**，这也是 PyTorch 当前的
-https://github.com/pytorch/pytorch/issues/159980[稳定版本]
-。
+* **推荐 CUDA 13.0**。当前
+https://github.com/Comfy-Org/comfy-kitchen[ComfyUI 的性能库]
+基于 `cu130` 开发，`cu130` 也是 PyTorch 当前的
+https://github.com/pytorch/pytorch/issues/172663[稳定版本]
+之一。
 
 * 如果你不清楚 GPU（如 Quadro、Tesla）是哪一代架构，参考
 https://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/[这篇文章]
@@ -72,7 +84,7 @@ https://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-c
 NOTE: __这些兼容性限制与 NVIDIA CUDA Toolkit 无直接关联，而是 PyTorch 官方为了避免二进制包过大而做出的取舍。可以参考其
 https://github.com/pytorch/pytorch/releases/tag/v2.8.0[发布说明]
 与
-https://github.com/pytorch/pytorch/blob/main/.ci/manywheel/build_cuda.sh[编译脚本]
+https://github.com/pytorch/pytorch/blob/v2.12.0/.ci/manywheel/build_cuda.sh[编译脚本]
 。__
 
 
@@ -82,24 +94,22 @@ https://github.com/pytorch/pytorch/blob/main/.ci/manywheel/build_cuda.sh[编译�
 
 `slim` 镜像仅预装基本的 ComfyUI 与 Manager，同时预装大量依赖项，方便后续无痛安装热门自定义节点（扩展插件）。推荐初学者使用。
 
+* link:cu130-slim-v2/README.adoc[`cu130-slim-v2`] ⭐
+** CUDA 13.0, Python 3.13 (GIL 版本), 无 xFormers
+
 * link:cu126-slim/README.adoc[`cu126-slim`]
 ** CUDA 12.6, Python 3.12
-
-* link:cu128-slim/README.adoc[`cu128-slim`] ⭐
-** CUDA 12.8, Python 3.12
-
-* link:cu130-slim/README.adoc[`cu130-slim`]
-** CUDA 13.0, Python 3.13 (GIL 版本), 无 xFormers
 
 ### MEGAPAK
 
 `megapak` 镜像为整合包，包含开发套件与常用自定义节点（扩展插件）。
 
-* link:cu126-megapak/README.adoc[`cu126-megapak`]
-** CUDA 12.6, Python 3.12, GCC 13
+* link:cu130-megapak-pt211/README.adoc[`cu130-megapak-pt211`] ⭐
+** CUDA 13.0, Python 3.13 (GIL 版本), GCC 14, PyTorch 2.11.0
 
-* link:cu128-megapak/README.adoc[`cu128-megapak`]
-** CUDA 12.8, Python 3.12, GCC 14
+* link:cu126-megapak/README.adoc[`cu126-megapak`]
+** CUDA 12.6, Python 3.12, GCC 13, PyTorch 2.9.1
+
 
 ### 测试镜像
 
@@ -107,15 +117,26 @@ https://github.com/pytorch/pytorch/blob/main/.ci/manywheel/build_cuda.sh[编译�
 ** 使用最新开发预览版的 PyTorch
 
 
-## 更多镜像标签
+## AMD ROCm 镜像标签
+
+适用于 AMD GPU 与 Ryzen AI APU
 
 * link:rocm/README.zh.adoc[`rocm`]
 
-** 适用于 AMD GPU，使用最新的 ROCm 7
+** 使用最新的 ROCm 7
+** 基于 PyTorch 的发布包构建（更新较快）
+
+* link:rocm7/README.zh.adoc[`rocm7`]
+
+** 使用最新的 ROCm 7
+** 基于 AMD 的镜像构建（功能更全面）
 
 * link:rocm6/README.zh.adoc[`rocm6`]
 
-** 适用于 AMD GPU，使用稳定的 ROCm 6
+** 使用稳定的 ROCm 6
+** RX 6000 系可用
+
+## 更多镜像标签
 
 * link:xpu-cn/[`xpu-cn`]
 

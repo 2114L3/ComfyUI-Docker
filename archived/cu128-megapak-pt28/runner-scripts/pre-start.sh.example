@@ -1,0 +1,6 @@
+#!/bin/bash
+set -eu
+
+echo "[INFO] Setup default rustup toolchain..."
+
+rustup default stable
